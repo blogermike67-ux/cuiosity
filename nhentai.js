@@ -14,6 +14,9 @@ const headers = {
     "User-Agent": "Curiosity/1.0 (Local Project)"
 };
 
+// Cache random homepage batches
+const randomPages = new Map();
+
 
 // GET CDN
 async function getCDN() {
@@ -27,11 +30,19 @@ async function getCDN() {
 }
 
 
+// LANGUAGE
+function getLanguage(tags) {
+    if (!Array.isArray(tags)) return "Unknown";
+
+    return tags.find(tag => tag.type === "language")?.name || "Unknown";
+}
+
+
 // SEARCH + FILTERS
 app.get("/nhentai/v2", async (req, res) => {
     try {
         const searched = req.query.searched || "";
-        const page = req.query.page || 1;
+        const page = Math.max(1, Number(req.query.page) || 1);
 
         const response = await fetch(
             `${API}/search?query=${encodeURIComponent(searched)}&page=${page}`,
@@ -45,26 +56,56 @@ app.get("/nhentai/v2", async (req, res) => {
         const data = await response.json();
         const cdn = await getCDN();
 
-        const galleries = data.result.map(item => ({
-            id: item.id,
+        const galleries = await Promise.all(
+            (data.result || []).map(async item => {
 
-            title:
-                item.english_title ||
-                item.japanese_title ||
-                "Untitled",
+                let tags = item.tags || [];
 
-            japanese_title: item.japanese_title,
+                // Fetch details if language is missing
+                if (!tags.some(tag => tag.type === "language")) {
+                    try {
+                        const detailsResponse = await fetch(
+                            `${API}/galleries/${item.id}`,
+                            { headers }
+                        );
 
-            photo: `${cdn.thumb_servers[0]}/${typeof item.thumbnail === "string"
-                ? item.thumbnail
-                : item.thumbnail?.path}`,
+                        if (detailsResponse.ok) {
+                            const details = await detailsResponse.json();
+                            const gallery = details.gallery || details;
 
-            pages: item.num_pages,
+                            tags = gallery.tags || tags;
+                        }
+                    } catch (error) {
+                        console.error("LANGUAGE ERROR:", error.message);
+                    }
+                }
 
-            language: item.tags?.find(
-                tag => tag.type === "language"
-            )?.name || "Unknown"
-        }));
+                const thumbnail =
+                    typeof item.thumbnail === "string"
+                        ? item.thumbnail
+                        : item.thumbnail?.path || item.cover?.path;
+
+                return {
+                    id: item.id,
+
+                    title:
+                        item.title?.english ||
+                        item.english_title ||
+                        item.title?.japanese ||
+                        item.japanese_title ||
+                        item.title?.pretty ||
+                        "Untitled",
+
+                    photo: thumbnail
+                        ? `${cdn.thumb_servers[0]}/${thumbnail}`
+                        : null,
+
+                    pages: item.num_pages,
+
+                    language: getLanguage(tags)
+                };
+            })
+        );
 
         res.json({
             result: galleries,
@@ -83,12 +124,20 @@ app.get("/nhentai/v2", async (req, res) => {
 });
 
 
-// RANDOM MANGA
+// RANDOM HOMEPAGE
 app.get("/nhentai/random", async (req, res) => {
     try {
+        const page = Math.max(1, Number(req.query.page) || 1);
+
+        // Return previously loaded random batch
+        if (randomPages.has(page)) {
+            return res.json(randomPages.get(page));
+        }
+
         const cdn = await getCDN();
 
-        const requests = Array.from({ length: 8 }, () =>
+        // Generate 24 random galleries
+        const requests = Array.from({ length: 24 }, () =>
             fetch(`${API}/galleries/random`, { headers })
         );
 
@@ -96,6 +145,7 @@ app.get("/nhentai/random", async (req, res) => {
 
         const galleries = await Promise.all(
             responses.map(async response => {
+
                 if (!response.ok) {
                     throw new Error("Could not load random manga");
                 }
@@ -104,9 +154,10 @@ app.get("/nhentai/random", async (req, res) => {
                 item = item.gallery || item;
 
                 if (!item.id) {
-                    throw new Error("Random response did not contain a gallery ID");
+                    throw new Error("Random gallery ID missing");
                 }
 
+                // Load full gallery if thumbnail or tags are missing
                 if (!item.thumbnail && !item.cover?.path) {
                     const detailsResponse = await fetch(
                         `${API}/galleries/${item.id}`,
@@ -126,10 +177,6 @@ app.get("/nhentai/random", async (req, res) => {
                         ? item.thumbnail
                         : item.thumbnail?.path || item.cover?.path;
 
-                if (!thumbnail) {
-                    throw new Error("Thumbnail missing");
-                }
-
                 return {
                     id: item.id,
 
@@ -141,18 +188,23 @@ app.get("/nhentai/random", async (req, res) => {
                         item.japanese_title ||
                         "Untitled",
 
-                    photo: `${cdn.thumb_servers[0]}/${thumbnail}`,
+                    photo: thumbnail
+                        ? `${cdn.thumb_servers[0]}/${thumbnail}`
+                        : null,
 
                     pages: item.num_pages,
 
-                    language: item.tags?.find(
-                        tag => tag.type === "language"
-                    )?.name || "Unknown"
+                    language: getLanguage(item.tags)
                 };
             })
         );
 
-        res.json({ result: galleries });
+        const result = { result: galleries };
+
+        // Save batch so Previous can return to it
+        randomPages.set(page, result);
+
+        res.json(result);
 
     } catch (error) {
         console.error("RANDOM ERROR:", error);
@@ -191,7 +243,7 @@ app.get("/nhentai/read/:id", async (req, res) => {
 
             totalPages: gallery.num_pages,
 
-            pages: gallery.pages.map(page => ({
+            pages: (gallery.pages || []).map(page => ({
                 number: page.number,
                 image: `${cdn.image_servers[0]}/${page.path}`,
                 width: page.width,
