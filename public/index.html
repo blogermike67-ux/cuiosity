@@ -1,0 +1,688 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curiosity</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #101014;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background: #19191f;
+    padding: 18px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    border-bottom: 1px solid #30303a;
+}
+
+header h1 {
+    margin: 0;
+    color: #b68cff;
+}
+
+.search {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+input, button, select {
+    padding: 12px;
+    border: none;
+    border-radius: 7px;
+    font-size: 14px;
+}
+
+input, select {
+    background: #292932;
+    color: white;
+    outline: none;
+}
+
+.search input {
+    width: 250px;
+}
+
+button {
+    background: #9c65ed;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+button:hover {
+    background: #8046d2;
+}
+
+button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+main {
+    padding: 25px 5%;
+    max-width: 1500px;
+    margin: auto;
+}
+
+#filterPanel {
+    display: none;
+    background: #1d1d25;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px 0;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+}
+
+#filterPanel input,
+#filterPanel select {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #444;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#latest {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+#status {
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+#mangaBox {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: #1d1d25;
+    padding: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card img {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    border-radius: 7px;
+    background: #292932;
+}
+
+.card h3 {
+    font-size: 15px;
+    line-height: 1.4;
+    min-height: 42px;
+    overflow-wrap: anywhere;
+}
+
+.card p {
+    color: #aaa;
+    font-size: 13px;
+}
+
+.language {
+    display: inline-block;
+    background: #383044;
+    color: #d6c2ff !important;
+    padding: 7px 9px;
+    border-radius: 5px;
+}
+
+.card button {
+    width: 100%;
+    min-height: 42px;
+}
+
+#pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    margin: 30px 0;
+}
+
+#pagination button {
+    min-width: 42px;
+    min-height: 42px;
+}
+
+#pagination button.active {
+    background: white;
+    color: #8046d2;
+}
+
+#pagination span {
+    padding: 8px;
+    color: #aaa;
+}
+
+#reader {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: #09090c;
+    overflow-y: auto;
+    padding: 18px;
+    text-align: center;
+}
+
+#reader h2 {
+    font-size: 19px;
+    overflow-wrap: anywhere;
+}
+
+#reader img {
+    display: block;
+    max-width: 100%;
+    max-height: 75vh;
+    object-fit: contain;
+    margin: 15px auto;
+}
+
+.reader-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 15px auto;
+    position: sticky;
+    bottom: 0;
+    background: #09090c;
+    padding: 12px 0;
+}
+
+.reader-controls button {
+    min-height: 44px;
+}
+
+#loading {
+    color: #b68cff;
+}
+
+@media(max-width: 850px) {
+    #mangaBox {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .card img {
+        height: 230px;
+    }
+}
+
+@media(max-width: 600px) {
+    header {
+        padding: 13px;
+    }
+
+    header h1 {
+        font-size: 25px;
+    }
+
+    .search {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+    }
+
+    .search input {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    main {
+        padding: 18px 12px;
+    }
+
+    #mangaBox {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 11px;
+    }
+
+    .card {
+        padding: 8px;
+    }
+
+    .card img {
+        height: 220px;
+    }
+
+    .card h3 {
+        font-size: 13px;
+    }
+
+    #filterPanel {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    #reader img {
+        max-height: 70vh;
+    }
+
+    .reader-controls button {
+        flex: 1;
+        min-width: 90px;
+    }
+}
+
+@media(max-width: 360px) {
+    .card img {
+        height: 185px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Curiosity</h1>
+
+    <div class="search">
+        <input id="search" placeholder="Search manga...">
+        <button id="btn">Search</button>
+        <button id="reMake">Random</button>
+    </div>
+</header>
+
+<main>
+
+    <button id="filterToggle">☰ Filters</button>
+
+    <div id="filterPanel">
+
+        <select id="category">
+            <option value="">All Categories</option>
+            <option value="doujinshi">Doujinshi</option>
+            <option value="manga">Manga</option>
+            <option value="artist cg">Artist CG</option>
+            <option value="game cg">Game CG</option>
+            <option value="western">Western</option>
+        </select>
+
+        <input id="tagFilter" placeholder="Tag">
+        <input id="artistFilter" placeholder="Artist">
+        <input id="characterFilter" placeholder="Character">
+        <input id="parodyFilter" placeholder="Parody">
+        <input id="groupFilter" placeholder="Group">
+
+        <select id="languageFilter">
+            <option value="">All Languages</option>
+            <option value="english">English</option>
+            <option value="japanese">Japanese</option>
+            <option value="chinese">Chinese</option>
+        </select>
+
+        <div class="filter-actions">
+            <button id="applyFilters">Apply Filters</button>
+            <button id="clearFilters">Clear</button>
+        </div>
+
+    </div>
+
+    <h2 id="latest">Discover</h2>
+    <p id="status">Loading...</p>
+
+    <div id="mangaBox"></div>
+    <div id="pagination"></div>
+
+</main>
+
+<div id="reader">
+    <h2 id="readerTitle"></h2>
+    <p id="pageInfo"></p>
+    <p id="loading"></p>
+
+    <img id="pageImage" alt="Reader page">
+
+    <div class="reader-controls">
+        <button id="previous">Previous</button>
+        <button id="next">Next</button>
+        <button id="closeReader">Close</button>
+    </div>
+</div>
+
+<script>
+const searchInput = document.getElementById("search");
+const mangaBox = document.getElementById("mangaBox");
+const statusText = document.getElementById("status");
+const pagination = document.getElementById("pagination");
+
+let currentPage = 1;
+let currentReaderPages = [];
+let readerPage = 0;
+let currentSearch = "";
+
+
+// FILTER PANEL
+document.getElementById("filterToggle").onclick = () => {
+    const panel = document.getElementById("filterPanel");
+
+    panel.style.display =
+        panel.style.display === "grid" ? "none" : "grid";
+};
+
+
+// BUILD FILTER QUERY
+function getFilterQuery() {
+    const filters = [
+        ["category", "category"],
+        ["tagFilter", "tag"],
+        ["artistFilter", "artist"],
+        ["characterFilter", "character"],
+        ["parodyFilter", "parody"],
+        ["groupFilter", "group"],
+        ["languageFilter", "language"]
+    ];
+
+    const terms = [];
+
+    filters.forEach(([id, type]) => {
+        const value = document.getElementById(id).value.trim();
+
+        if (value) {
+            terms.push(`${type}:"${value}"`);
+        }
+    });
+
+    return terms.join(" ");
+}
+
+
+// APPLY FILTERS
+document.getElementById("applyFilters").onclick = () => {
+    currentSearch = getFilterQuery();
+    searchInput.value = currentSearch;
+    searchManga(currentSearch, 1);
+};
+
+
+// CLEAR FILTERS
+document.getElementById("clearFilters").onclick = () => {
+    document.querySelectorAll(
+        "#filterPanel input, #filterPanel select"
+    ).forEach(input => input.value = "");
+
+    currentSearch = "";
+    searchInput.value = "";
+    searchManga("", 1);
+};
+
+
+// SEARCH
+async function searchManga(searched, page = 1) {
+    try {
+        currentSearch = searched;
+        currentPage = page;
+
+        statusText.textContent = "Searching...";
+        mangaBox.innerHTML = "";
+        pagination.innerHTML = "";
+
+        const response = await fetch(
+            `/nhentai/v2?searched=${encodeURIComponent(searched)}&page=${page}`
+        );
+
+        if (!response.ok) {
+            throw new Error("Search failed");
+        }
+
+        const data = await response.json();
+
+        displayManga(data.result || []);
+
+        statusText.textContent =
+            `${data.total || 0} results found`;
+
+        createPagination(data.num_pages || 1, page);
+
+    } catch (error) {
+        statusText.textContent = error.message;
+    }
+}
+
+
+// DISPLAY CARDS
+function displayManga(galleries) {
+    mangaBox.innerHTML = "";
+
+    if (!galleries.length) {
+        mangaBox.innerHTML = "<p>No results found.</p>";
+        return;
+    }
+
+    galleries.forEach(manga => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const image = document.createElement("img");
+        image.src = manga.photo;
+        image.alt = manga.title || "Manga cover";
+        image.loading = "lazy";
+
+        const title = document.createElement("h3");
+        title.textContent = manga.title || "Untitled";
+
+        const pages = document.createElement("p");
+        pages.textContent = `Pages: ${manga.pages || "Unknown"}`;
+
+        const language = document.createElement("p");
+        language.className = "language";
+        language.textContent = manga.language || "Unknown";
+
+        const read = document.createElement("button");
+        read.textContent = "Read";
+        read.onclick = () => openManga(manga.id);
+
+        card.append(image, title, pages, language, read);
+        mangaBox.appendChild(card);
+    });
+}
+
+
+// SEARCH PAGINATION
+function createPagination(total, current) {
+    pagination.innerHTML = "";
+
+    if (total <= 1) return;
+
+    const addButton = (label, page, active = false) => {
+        const button = document.createElement("button");
+        button.textContent = label;
+
+        if (active) button.classList.add("active");
+
+        button.onclick = () => searchManga(currentSearch, page);
+        pagination.appendChild(button);
+    };
+
+    if (current > 1) {
+        addButton("Previous", current - 1);
+    }
+
+    for (
+        let i = Math.max(1, current - 2);
+        i <= Math.min(total, current + 2);
+        i++
+    ) {
+        addButton(i, i, i === current);
+    }
+
+    if (current < total) {
+        addButton("Next", current + 1);
+    }
+}
+
+
+// RANDOM MANGA
+async function randomPage() {
+    try {
+        statusText.textContent = "Loading random manga...";
+        mangaBox.innerHTML = "";
+        pagination.innerHTML = "";
+
+        const response = await fetch("/nhentai/random");
+
+        if (!response.ok) {
+            throw new Error("Could not load random manga");
+        }
+
+        const data = await response.json();
+
+        displayManga(data.result || []);
+        statusText.textContent = "Random discoveries";
+
+    } catch (error) {
+        statusText.textContent = error.message;
+    }
+}
+
+
+// OPEN READER
+async function openManga(id) {
+    const reader = document.getElementById("reader");
+
+    reader.style.display = "block";
+    document.getElementById("loading").textContent = "Loading pages...";
+    document.getElementById("pageImage").style.display = "none";
+
+    try {
+        const response = await fetch(`/nhentai/read/${id}`);
+
+        if (!response.ok) {
+            throw new Error("Could not load manga");
+        }
+
+        const data = await response.json();
+
+        currentReaderPages = data.pages || [];
+        readerPage = 0;
+
+        document.getElementById("readerTitle").textContent = data.title;
+        document.getElementById("loading").textContent = "";
+
+        if (!currentReaderPages.length) {
+            throw new Error("No pages available");
+        }
+
+        showPage();
+
+    } catch (error) {
+        document.getElementById("loading").textContent = error.message;
+    }
+}
+
+
+// SHOW READER PAGE
+function showPage() {
+    const page = currentReaderPages[readerPage];
+
+    if (!page) return;
+
+    const image = document.getElementById("pageImage");
+
+    image.style.display = "block";
+    image.src = page.image;
+
+    document.getElementById("pageInfo").textContent =
+        `Page ${readerPage + 1} of ${currentReaderPages.length}`;
+
+    document.getElementById("previous").disabled = readerPage === 0;
+
+    document.getElementById("next").disabled =
+        readerPage === currentReaderPages.length - 1;
+}
+
+
+// READER CONTROLS
+document.getElementById("previous").onclick = () => {
+    if (readerPage > 0) {
+        readerPage--;
+        showPage();
+    }
+};
+
+document.getElementById("next").onclick = () => {
+    if (readerPage < currentReaderPages.length - 1) {
+        readerPage++;
+        showPage();
+    }
+};
+
+document.getElementById("closeReader").onclick = () => {
+    document.getElementById("reader").style.display = "none";
+};
+
+
+// KEYBOARD CONTROLS
+document.addEventListener("keydown", event => {
+    if (document.getElementById("reader").style.display !== "block") return;
+
+    if (event.key === "ArrowRight") {
+        document.getElementById("next").click();
+    }
+
+    if (event.key === "ArrowLeft") {
+        document.getElementById("previous").click();
+    }
+
+    if (event.key === "Escape") {
+        document.getElementById("closeReader").click();
+    }
+});
+
+
+// SEARCH BUTTON
+document.getElementById("btn").onclick = () => {
+    searchManga(searchInput.value.trim(), 1);
+};
+
+searchInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        searchManga(searchInput.value.trim(), 1);
+    }
+});
+
+
+// RANDOM BUTTON
+document.getElementById("reMake").onclick = randomPage;
+
+
+// INITIAL LOAD
+randomPage();
+
+</script>
+
+</body>
+</html>
